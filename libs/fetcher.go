@@ -5,8 +5,6 @@ import (
 
 	"io/ioutil"
 
-	"sync"
-
 	"encoding/json"
 
 	log "github.com/Sirupsen/logrus"
@@ -33,16 +31,16 @@ func fetchURL(url string, ch chan<- []byte) {
 func FetchAqiData(urls []string) []AqiData {
 	ch := make(chan []byte)
 	res := []AqiData{}
-	lock := &sync.Mutex{}
+	// lock := &sync.Mutex{}
 	for _, url := range urls {
 		go fetchURL(url, ch)
 	}
 	for range urls {
 		tmp := AqiData{}
 		json.Unmarshal(<-ch, &tmp)
-		lock.Lock()
+		// lock.Lock()
 		res = append(res, tmp)
-		lock.Unlock()
+		// lock.Unlock()
 	}
 	return res
 }
