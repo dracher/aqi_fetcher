@@ -54,3 +54,36 @@ type AqiData struct {
 		Name string
 	}
 }
+
+// AqiFlatData is
+type AqiFlatData struct {
+	Date     string
+	Impact   string
+	Aqi      int
+	Co       int
+	No2      int
+	O3       int
+	Pm10     int
+	Pm25     int
+	So2      int
+	Temp     int
+	CityName string
+}
+
+// Flat make data flat easy to read and store
+func (a AqiData) Flat() *AqiFlatData {
+	d := new(AqiFlatData)
+	d.Date = a.Aqi.Date.String()
+	d.Impact = a.Aqi.Impact
+	d.Aqi = a.Aqi.Val
+	d.Co = a.Iaqi.Co.Val
+	d.No2 = a.Iaqi.No2.Val
+	d.O3 = a.Iaqi.O3.Val
+	d.Pm10 = a.Iaqi.Pm10.Val
+	d.Pm25 = a.Iaqi.Pm25.Val
+	d.So2 = a.Iaqi.So2.Val
+	d.Temp = a.Weather.Tempnow
+	d.CityName = strings.ToLower(a.City.Name)
+
+	return d
+}

@@ -1,20 +1,19 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"os"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dracher/aqi_fetcher/libs"
-	"github.com/go-xorm/xorm"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
-	dbPath  = "/home/dracher/GoProjects/src/github.com/dracher/aqi_fetcher/aqidata.sqlite"
+	// dbPath  = "/home/dracher/GoProjects/src/github.com/dracher/aqi_fetcher/aqidb/aqidata.boltdb"
 	feedURL = "http://feed.aqicn.org/feed/%s/en/feed.v1.json"
 )
 
+var dbPath = flag.String("d", "/home/dracher/GoProjects/src/github.com/dracher/aqi_fetcher/aqidb/aqidata.boltdb", "the absolute path to boltdb database file")
 var cityLists = []string{"beijing", "shanghai", "tianjin", "guangzhou", "chengdu", "hongkong"}
 
 func genFeedURLs() []string {
@@ -25,22 +24,19 @@ func genFeedURLs() []string {
 	return feedURLs
 }
 
-func initDB() *xorm.Engine {
-	engine, err := xorm.NewEngine("sqlite3", dbPath)
-	if err != nil {
-		log.Panic(err)
-	}
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		log.Warnf("%s not exists, start to create table schema", dbPath)
-		for _, city := range cityLists {
-			engine.Sync(libs.TableData{CityName: city})
-		}
-	}
-	return engine
-}
-
 func main() {
-	orm := initDB()
+	flag.Parse()
+
+	db := libs.NewBoltDB(*dbPath)
+	defer db.Close()
+
+	log.Info("Start to fetching aqi data")
 	res := libs.FetchAqiData(genFeedURLs())
-	libs.SaveToDB(res, orm)
+
+	log.Warnf("Prepare saving data to %s", *dbPath)
+	for _, data := range res {
+		libs.SaveAqiData(db, data.Flat())
+		log.Infof("Saving %s aqi data to db", data.City.Name)
+	}
+	log.Warn("All Done~")
 }
